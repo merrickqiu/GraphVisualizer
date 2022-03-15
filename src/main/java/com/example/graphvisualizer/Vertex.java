@@ -60,6 +60,10 @@ public class Vertex extends Group {
         return circle.getCenterY();
     }
 
+    public String getLabel() {
+        return text.getText();
+    }
+
     public void addEdge(Edge edge) {
         edges.add(edge);
     }

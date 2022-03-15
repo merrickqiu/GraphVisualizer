@@ -27,9 +27,13 @@ public class GUI extends Application {
     private Vertex startVertex = null; // The selected start vertex for edge creation
     @Override
     public void start(Stage stage) throws IOException {
-        Pane graph = new Pane();
+        Graph<String> graph = new Graph<>();
+        Display display = new Display(graph);
+
+        Pane graphPane = new Pane();
+        graphPane.setPrefSize(1600, 1200);
         EventHandler<MouseEvent> vertexClick = event -> {
-            // Edge Creation
+            // Edge Creation/Deletion
             if (event.isShiftDown()) {
                 // Select Start Node
                 if (startVertex == null) {
@@ -40,9 +44,35 @@ public class GUI extends Application {
                 // Select End Node
                 else {
                     Vertex endVertex = (Vertex)((Node)event.getTarget()).getParent();
+                    // Don't allow self connection
+                    if (startVertex == endVertex) {
+                        System.out.println("Blocked self connection");
+                        startVertex.setColor(Color.WHITE);
+                        startVertex = null;
+                        return;
+                    }
+                    //Delete edge
+                    for (Edge edge : startVertex.edges) { // jank way to test if edge already exists
+                        if (edge.v1 == startVertex && edge.v2 == endVertex ||
+                            edge.v1 == endVertex && edge.v2 == startVertex) {
+                            System.out.println("Deleting edge");
+                            graph.removeEdge(startVertex.getLabel(), endVertex.getLabel());
+                            display.refresh();
+
+                            graphPane.getChildren().remove(edge);
+                            startVertex.edges.remove(edge);
+                            endVertex.edges.remove(edge);
+                            startVertex.setColor(Color.WHITE);
+                            startVertex = null;
+                            return;
+                        }
+                    }
+                    //Create edge
+                    graph.addEdge(startVertex.getLabel(), endVertex.getLabel());
+                    display.refresh();
 
                     Edge edge = new Edge(startVertex, endVertex);
-                    graph.getChildren().add(edge);
+                    graphPane.getChildren().add(edge);
 
                     startVertex.addEdge(edge);
                     endVertex.addEdge(edge);
@@ -55,25 +85,32 @@ public class GUI extends Application {
             else {
                 // Vertex Creation
                 if (event.getButton() == MouseButton.PRIMARY) {
+                    graph.addVertex(vertexCount.toString());
+                    display.refresh();
+
                     Vertex vertex = new Vertex(event.getSceneX(), event.getSceneY(), vertexCount.toString());
-                    graph.getChildren().add(vertex);
+                    graphPane.getChildren().add(vertex);
                     vertexCount++;
                     System.out.printf("Added circle at x:%f y:%f\n", event.getSceneX(), event.getSceneY());
                 }
                 //Vertex Deletion
                 else if (event.getButton() == MouseButton.SECONDARY) {
                     Vertex vertex = (Vertex)((Node)event.getTarget()).getParent();
+                    graph.removeVertex(vertex.getLabel());
+                    display.refresh();
+
                     //Edge removal
                     while(!vertex.edges.isEmpty()) {
                         Edge edge = vertex.edges.get(0);
-                        graph.getChildren().remove(edge);
+                        graphPane.getChildren().remove(edge);
                         edge.delete();
                     }
-                    graph.getChildren().remove(vertex);
+                    graphPane.getChildren().remove(vertex);
                     System.out.println("Removed Circle: " + event.getTarget());
                 }
             }
         };
+
         // Vertex Movement
         EventHandler<MouseEvent> vertexDrag = event -> {
             Vertex vertex = (Vertex)((Node)event.getTarget()).getParent();
@@ -82,10 +119,12 @@ public class GUI extends Application {
         };
 
         MouseHandler vertexMouseHandler = new MouseHandler(vertexClick, vertexDrag);
-        graph.addEventHandler(MouseEvent.ANY, vertexMouseHandler);
+        graphPane.addEventHandler(MouseEvent.ANY, vertexMouseHandler);
 
-        StackPane root = new StackPane();
-        root.getChildren().addAll(graph);
+        GridPane root = new GridPane();
+
+        root.add(graphPane, 0, 0, 1, 1);
+        root.add(display, 1, 0, 1, 1);
         Scene scene = new Scene(root, 600, 400);
         stage.setScene(scene);
         stage.setTitle("Graph Visualizer");
@@ -94,5 +133,28 @@ public class GUI extends Application {
 
     public static void main(String[] args) {
         launch();
+    }
+}
+
+class Display extends VBox {
+    private static final String minDegreeFormat = "Minimum Degree: %d";
+    private static final String maxDegreeFormat = "Maximum Degree: %d";
+    private static final String bipartiteFormat = "Bipartite?: %b";
+    final Text title, minDegree, maxDegree, bipartite;
+    Graph graph;
+    public Display(Graph graph) {
+        this.graph = graph;
+        this.setBackground(new Background(new BackgroundFill(Color.GREY, CornerRadii.EMPTY, Insets.EMPTY)));
+        title = new Text("----Graph properties----");
+        minDegree = new Text(String.format(minDegreeFormat, graph.getMinDegree()));
+        maxDegree = new Text(String.format(maxDegreeFormat, graph.getMaxDegree()));
+        bipartite = new Text(String.format(bipartiteFormat, graph.isBipartite()));
+        this.getChildren().addAll(title, minDegree, maxDegree, bipartite);
+    }
+
+    public void refresh() {
+        minDegree.setText(String.format(minDegreeFormat, graph.getMinDegree()));
+        maxDegree.setText(String.format(maxDegreeFormat, graph.getMaxDegree()));
+        bipartite.setText(String.format(bipartiteFormat, graph.isBipartite()));
     }
 }

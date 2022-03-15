@@ -61,14 +61,29 @@ public class Graph<T> {
     }
 
     public int getMinDegree() {
-        return adjList.values().stream().mapToInt(List::size).min().orElseThrow(NoSuchElementException::new);
+        try {
+            return adjList.values().stream().mapToInt(List::size).min().orElseThrow(NoSuchElementException::new);
+        }
+        catch (NoSuchElementException e) {
+            return -1;
+        }
     }
 
     public int getMaxDegree() {
-        return adjList.values().stream().mapToInt(List::size).max().orElseThrow(NoSuchElementException::new);
+        try {
+            return adjList.values().stream().mapToInt(List::size).max().orElseThrow(NoSuchElementException::new);
+        } catch (NoSuchElementException e){
+            return -1;
+        }
+
     }
 
+    //Assumes that graph is all connected
     public boolean isBipartite() {
+        if (adjList.isEmpty()) {
+            return true;
+        }
+
         boolean isRed = true;
         Set<T> visited = new HashSet<>();
         Queue<T> searchQueue = new LinkedList<T>();
@@ -76,7 +91,7 @@ public class Graph<T> {
         Set<T> red = new HashSet<>();
         Set<T> blue = new HashSet<>();
 
-        // Add source to queue
+
         T source = adjList.keySet().stream().findAny().orElseThrow(NoSuchElementException::new);
         searchQueue.add(source);
         red.add(source);
@@ -88,10 +103,6 @@ public class Graph<T> {
 
             Set<T> currentColor = red.contains(vertex) ? red : blue;
             Set<T> otherColor = red.contains(vertex) ? blue : red;
-
-            System.out.println(vertex);
-            System.out.println(red);
-            System.out.println(blue);
 
             // Look through all unvisited neighbors
             for(T neighbor : adjList.get(vertex)) {
