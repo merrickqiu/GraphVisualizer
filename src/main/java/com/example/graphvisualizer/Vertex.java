@@ -7,13 +7,15 @@ import javafx.scene.shape.Line;
 import javafx.scene.text.Text;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+
 public class Vertex extends Group {
-    private Circle circle, innerCircle;
-    private Text text;
-    public Map<Vertex, Line> adjVertices;
+    private final Circle circle, innerCircle;
+    private final Text text;
+    public List<Edge> edges;
 
     public Vertex(double x, double y, String label) {
         circle = new Circle(30, Color.BLACK);
@@ -29,7 +31,7 @@ public class Vertex extends Group {
 
         this.getChildren().addAll(circle, innerCircle, text);
         this.getChildren().addAll();
-        adjVertices = new HashMap<>();
+        edges = new LinkedList<>();
     }
 
     public void setX(double x) {
@@ -57,10 +59,13 @@ public class Vertex extends Group {
         return circle.getCenterY();
     }
 
-    public void connect(Vertex w) {
-        Line edge = new Line(getX(), getY(), w.getX(), w.getY());
-        adjVertices.put(w, edge);
-        w.adjVertices.put(this, edge);
-        this.getChildren().add(edge);
+    public void addEdge(Edge edge) {
+        edges.add(edge);
+    }
+
+    public void refreshEdges() {
+        for (Edge e : edges) {
+            e.refresh();
+        }
     }
 }

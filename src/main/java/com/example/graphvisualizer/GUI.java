@@ -32,10 +32,17 @@ public class GUI extends Application {
             if (event.isShiftDown()) {
                 if (startVertex == null) {
                     startVertex = (Vertex)((Node)event.getTarget()).getParent();
+                    System.out.println("Added Start Node");
                 } else {
                     Vertex endVertex = (Vertex)((Node)event.getTarget()).getParent();
-                    startVertex.connect(endVertex);
+
+                    Edge edge = new Edge(startVertex, endVertex);
+                    graph.getChildren().add(edge);
+
+                    startVertex.addEdge(edge);
+                    endVertex.addEdge(edge);
                     startVertex = null;
+                    System.out.println("Created Edge");
                 }
             } else {
                 if (event.getButton() == MouseButton.PRIMARY) {
@@ -52,6 +59,7 @@ public class GUI extends Application {
         EventHandler<MouseEvent> vertexDrag = event -> {
             Vertex vertex = (Vertex)((Node)event.getTarget()).getParent();
             vertex.setXY(event.getSceneX(), event.getSceneY());
+            vertex.refreshEdges();
         };
 
         MouseHandler vertexMouseHandler = new MouseHandler(vertexClick, vertexDrag);
