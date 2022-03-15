@@ -18,4 +18,9 @@ public class Edge extends Line {
         this.setEndX(v2.getX());
         this.setEndY(v2.getY());
     }
+
+    public void delete() {
+        v1.edges.remove(this);
+        v2.edges.remove(this);
+    }
 }

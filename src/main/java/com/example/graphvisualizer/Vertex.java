@@ -2,6 +2,7 @@ package com.example.graphvisualizer;
 
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Text;
@@ -64,8 +65,12 @@ public class Vertex extends Group {
     }
 
     public void refreshEdges() {
-        for (Edge e : edges) {
-            e.refresh();
+        for (Edge edge : edges) {
+            edge.refresh();
         }
+    }
+
+    public void setColor(Paint paint) {
+        innerCircle.setFill(paint);
     }
 }

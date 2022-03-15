@@ -23,17 +23,22 @@ import java.io.IOException;
 import java.util.List;
 
 public class GUI extends Application {
-    private Integer nodeCount = 0;
-    private Vertex startVertex = null;
+    private Integer vertexCount = 0; // The next vertex number
+    private Vertex startVertex = null; // The selected start vertex for edge creation
     @Override
     public void start(Stage stage) throws IOException {
         Pane graph = new Pane();
         EventHandler<MouseEvent> vertexClick = event -> {
+            // Edge Creation
             if (event.isShiftDown()) {
+                // Select Start Node
                 if (startVertex == null) {
                     startVertex = (Vertex)((Node)event.getTarget()).getParent();
+                    startVertex.setColor(Color.RED);
                     System.out.println("Added Start Node");
-                } else {
+                }
+                // Select End Node
+                else {
                     Vertex endVertex = (Vertex)((Node)event.getTarget()).getParent();
 
                     Edge edge = new Edge(startVertex, endVertex);
@@ -41,21 +46,35 @@ public class GUI extends Application {
 
                     startVertex.addEdge(edge);
                     endVertex.addEdge(edge);
+
+                    startVertex.setColor(Color.WHITE);
                     startVertex = null;
                     System.out.println("Created Edge");
                 }
-            } else {
+            }
+            else {
+                // Vertex Creation
                 if (event.getButton() == MouseButton.PRIMARY) {
-                    Vertex vertex = new Vertex(event.getSceneX(), event.getSceneY(), nodeCount.toString());
+                    Vertex vertex = new Vertex(event.getSceneX(), event.getSceneY(), vertexCount.toString());
                     graph.getChildren().add(vertex);
-                    nodeCount++;
+                    vertexCount++;
                     System.out.printf("Added circle at x:%f y:%f\n", event.getSceneX(), event.getSceneY());
-                } else if (event.getButton() == MouseButton.SECONDARY) {
-                    graph.getChildren().remove(((Node)event.getTarget()).getParent());
+                }
+                //Vertex Deletion
+                else if (event.getButton() == MouseButton.SECONDARY) {
+                    Vertex vertex = (Vertex)((Node)event.getTarget()).getParent();
+                    //Edge removal
+                    while(!vertex.edges.isEmpty()) {
+                        Edge edge = vertex.edges.get(0);
+                        graph.getChildren().remove(edge);
+                        edge.delete();
+                    }
+                    graph.getChildren().remove(vertex);
                     System.out.println("Removed Circle: " + event.getTarget());
                 }
             }
         };
+        // Vertex Movement
         EventHandler<MouseEvent> vertexDrag = event -> {
             Vertex vertex = (Vertex)((Node)event.getTarget()).getParent();
             vertex.setXY(event.getSceneX(), event.getSceneY());
