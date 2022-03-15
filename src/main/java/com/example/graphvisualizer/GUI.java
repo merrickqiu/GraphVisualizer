@@ -45,70 +45,71 @@ public class GUI extends Application {
             }
             //Vertex Deletion
             else if (event.getButton() == MouseButton.SECONDARY) {
-                Vertex vertex = (Vertex)((Node)event.getTarget()).getParent();
-                graph.removeVertex(vertex.getLabel());
-                display.refresh();
 
-                //Edge removal
-                while(!vertex.edges.isEmpty()) {
-                    Edge edge = vertex.edges.get(0);
-                    graphPane.getChildren().remove(edge);
-                    edge.delete();
-                }
-                graphPane.getChildren().remove(vertex);
-                System.out.println("Removed Circle: " + event.getTarget());
-            }
-        };
-        EventHandler<MouseEvent> shiftClick = event -> {
-            // Select Start Node
-            if (startVertex == null) {
-                startVertex = (Vertex)((Node)event.getTarget()).getParent();
-                startVertex.setColor(Color.RED);
-                System.out.println("Added Start Node");
-            }
-            // Select End Node
-            else {
-                Vertex endVertex = (Vertex)((Node)event.getTarget()).getParent();
-                // Don't allow self connection
-                if (startVertex == endVertex) {
-                    System.out.println("Blocked self connection");
-                    startVertex.setColor(Color.WHITE);
-                    startVertex = null;
-                    return;
-                }
-                //Delete edge
-                for (Edge edge : startVertex.edges) { // jank way to test if edge already exists
-                    if (edge.v1 == startVertex && edge.v2 == endVertex ||
-                            edge.v1 == endVertex && edge.v2 == startVertex) {
-                        System.out.println("Deleting edge");
-                        graph.removeEdge(startVertex.getLabel(), endVertex.getLabel());
-                        display.refresh();
 
-                        graphPane.getChildren().remove(edge);
-                        startVertex.edges.remove(edge);
-                        endVertex.edges.remove(edge);
+                // Select Start Node
+                if (startVertex == null) {
+                    startVertex = (Vertex)((Node)event.getTarget()).getParent();
+                    startVertex.setColor(Color.RED);
+                    System.out.println("Added Start Node");
+                }
+                // Select End Node
+                else {
+                    Vertex endVertex = (Vertex)((Node)event.getTarget()).getParent();
+                    // Don't allow self connection
+                    if (startVertex == endVertex) {
+                        System.out.println("Blocked self connection");
                         startVertex.setColor(Color.WHITE);
                         startVertex = null;
                         return;
                     }
+                    //Delete edge
+                    for (Edge edge : startVertex.edges) { // jank way to test if edge already exists
+                        if (edge.v1 == startVertex && edge.v2 == endVertex ||
+                                edge.v1 == endVertex && edge.v2 == startVertex) {
+                            System.out.println("Deleting edge");
+                            graph.removeEdge(startVertex.getLabel(), endVertex.getLabel());
+                            display.refresh();
+
+                            graphPane.getChildren().remove(edge);
+                            startVertex.edges.remove(edge);
+                            endVertex.edges.remove(edge);
+                            startVertex.setColor(Color.WHITE);
+                            startVertex = null;
+                            return;
+                        }
+                    }
+                    //Create edge
+                    graph.addEdge(startVertex.getLabel(), endVertex.getLabel());
+                    display.refresh();
+
+                    Edge edge = new Edge(startVertex, endVertex);
+                    graphPane.getChildren().add(edge);
+
+                    startVertex.addEdge(edge);
+                    endVertex.addEdge(edge);
+
+                    startVertex.setColor(Color.WHITE);
+                    startVertex = null;
+                    System.out.println("Created Edge");
                 }
-                //Create edge
-                graph.addEdge(startVertex.getLabel(), endVertex.getLabel());
-                display.refresh();
-
-                Edge edge = new Edge(startVertex, endVertex);
-                graphPane.getChildren().add(edge);
-
-                startVertex.addEdge(edge);
-                endVertex.addEdge(edge);
-
-                startVertex.setColor(Color.WHITE);
-                startVertex = null;
-                System.out.println("Created Edge");
             }
         };
+        EventHandler<MouseEvent> shiftClick = event -> {
+            Vertex vertex = (Vertex)((Node)event.getTarget()).getParent();
+            graph.removeVertex(vertex.getLabel());
+            display.refresh();
+
+            //Edge removal
+            while(!vertex.edges.isEmpty()) {
+                Edge edge = vertex.edges.get(0);
+                graphPane.getChildren().remove(edge);
+                edge.delete();
+            }
+            graphPane.getChildren().remove(vertex);
+            System.out.println("Removed Circle: " + event.getTarget());
+        };
         EventHandler<MouseEvent> handleClick = event -> {
-            // Edge Creation/Deletion
             if (event.isShiftDown()) {
                 shiftClick.handle(event);
             }
