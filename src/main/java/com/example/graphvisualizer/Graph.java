@@ -65,15 +65,16 @@ public class Graph<T> {
             return adjList.values().stream().mapToInt(List::size).min().orElseThrow(NoSuchElementException::new);
         }
         catch (NoSuchElementException e) {
-            return -1;
+            return 0;
         }
     }
 
     public int getMaxDegree() {
         try {
             return adjList.values().stream().mapToInt(List::size).max().orElseThrow(NoSuchElementException::new);
-        } catch (NoSuchElementException e){
-            return -1;
+        }
+        catch (NoSuchElementException e){
+            return 0;
         }
 
     }

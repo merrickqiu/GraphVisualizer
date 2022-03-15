@@ -21,6 +21,9 @@ public class PropertyDisplay extends VBox {
         this.graph = graph;
         this.setBackground(new Background(new BackgroundFill(Color.GREY, CornerRadii.EMPTY, Insets.EMPTY)));
         properties = new ArrayList<>();
+        this.getChildren().add(new Text("----GRAPH PROPERTIES----"));
+        addProperty("Vertices:", graph::getVertexCount);
+        addProperty("Edges: ", graph::getEdgeCount);
         addProperty("Minimum Degree: ", graph::getMinDegree);
         addProperty("Maximum Degree: ", graph::getMaxDegree);
         addProperty("Bipartite: ", graph::isBipartite);
