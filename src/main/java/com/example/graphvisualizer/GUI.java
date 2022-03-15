@@ -14,62 +14,48 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 
 import java.io.IOException;
+import java.util.List;
 
-class Vertex extends Group {
-    Circle circle, innerCircle;
-    Text text;
-    public Vertex(double x, double y, String label) {
-        circle = new Circle(30, Color.BLACK);
-        innerCircle = new Circle(25, Color.WHITE);
-        text = new Text(label);
-
-        circle.setCenterX(x);
-        circle.setCenterY(y);
-        innerCircle.setCenterX(x);
-        innerCircle.setCenterY(y);
-        text.setX(x);
-        text.setY(y);
-
-        this.getChildren().addAll(circle, innerCircle, text);
-    }
-
-    public void setX(double x) {
-        circle.setCenterX(x);
-        innerCircle.setCenterX(x);
-        text.setX(x);
-    }
-
-    public void setY(double y) {
-        circle.setCenterY(y);
-        innerCircle.setCenterY(y);
-        text.setY(y);
-    }
-}
 public class GUI extends Application {
+    private Integer nodeCount = 0;
+    private Vertex startVertex = null;
     @Override
     public void start(Stage stage) throws IOException {
         Pane graph = new Pane();
-        graph.setOnMouseClicked( event -> {
-            if (event.getButton() == MouseButton.PRIMARY) {
-                Vertex vertex = new Vertex(event.getSceneX(), event.getSceneY(), "N");
-                graph.getChildren().add(vertex);
-                System.out.printf("Added circle at x:%f y:%f\n", event.getSceneX(), event.getSceneY());
-            } else if (event.getButton() == MouseButton.SECONDARY) {
-                graph.getChildren().remove(((Node)event.getTarget()).getParent());
-                System.out.println("Removed Circle: " + event.getTarget());
+        EventHandler<MouseEvent> vertexClick = event -> {
+            if (event.isShiftDown()) {
+                if (startVertex == null) {
+                    startVertex = (Vertex)((Node)event.getTarget()).getParent();
+                } else {
+                    Vertex endVertex = (Vertex)((Node)event.getTarget()).getParent();
+                    startVertex.connect(endVertex);
+                    startVertex = null;
+                }
+            } else {
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    Vertex vertex = new Vertex(event.getSceneX(), event.getSceneY(), nodeCount.toString());
+                    graph.getChildren().add(vertex);
+                    nodeCount++;
+                    System.out.printf("Added circle at x:%f y:%f\n", event.getSceneX(), event.getSceneY());
+                } else if (event.getButton() == MouseButton.SECONDARY) {
+                    graph.getChildren().remove(((Node)event.getTarget()).getParent());
+                    System.out.println("Removed Circle: " + event.getTarget());
+                }
             }
-        });
-
-        graph.setOnMouseDragged( event -> {
+        };
+        EventHandler<MouseEvent> vertexDrag = event -> {
             Vertex vertex = (Vertex)((Node)event.getTarget()).getParent();
-            vertex.setX(event.getSceneX());
-            vertex.setY(event.getSceneY());
-        });
+            vertex.setXY(event.getSceneX(), event.getSceneY());
+        };
+
+        MouseHandler vertexMouseHandler = new MouseHandler(vertexClick, vertexDrag);
+        graph.addEventHandler(MouseEvent.ANY, vertexMouseHandler);
 
         StackPane root = new StackPane();
         root.getChildren().addAll(graph);
