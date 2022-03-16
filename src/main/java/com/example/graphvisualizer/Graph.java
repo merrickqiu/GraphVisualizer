@@ -11,7 +11,7 @@ public class Graph<T> {
     }
 
     public void removeVertex(T vertex) {
-        adjList.values().stream().forEach(e -> e.remove(vertex));
+        adjList.values().forEach(e -> e.remove(vertex));
         adjList.remove(vertex);
     }
 
@@ -78,13 +78,21 @@ public class Graph<T> {
         }
 
     }
-
-    //Assumes that graph is all connected
     public boolean isBipartite() {
         if (adjList.isEmpty()) {
             return true;
         }
-
+        // Inefficient but works for small graphs
+        for (T source : adjList.keySet()) {
+            if (!isBipartite(source)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    //Assumes that graph is all connected
+    @Deprecated
+    public boolean isBipartite(T source) {
         boolean isRed = true;
         Set<T> visited = new HashSet<>();
         Queue<T> searchQueue = new LinkedList<T>();
@@ -92,8 +100,6 @@ public class Graph<T> {
         Set<T> red = new HashSet<>();
         Set<T> blue = new HashSet<>();
 
-
-        T source = adjList.keySet().stream().findAny().orElseThrow(NoSuchElementException::new);
         searchQueue.add(source);
         red.add(source);
 
@@ -120,7 +126,6 @@ public class Graph<T> {
         }
         return true;
     }
-
 
     @Override
     public String toString()

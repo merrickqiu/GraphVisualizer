@@ -3,7 +3,6 @@ package com.example.graphvisualizer;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -43,10 +42,8 @@ public class GUI extends Application {
                 vertexCount++;
                 System.out.printf("Added circle at x:%f y:%f\n", event.getSceneX(), event.getSceneY());
             }
-            //Vertex Deletion
+            //Edge Handling
             else if (event.getButton() == MouseButton.SECONDARY) {
-
-
                 // Select Start Node
                 if (startVertex == null) {
                     startVertex = (Vertex)((Node)event.getTarget()).getParent();
@@ -56,9 +53,9 @@ public class GUI extends Application {
                 // Select End Node
                 else {
                     Vertex endVertex = (Vertex)((Node)event.getTarget()).getParent();
-                    // Don't allow self connection
+                    // Undo Select
                     if (startVertex == endVertex) {
-                        System.out.println("Blocked self connection");
+                        System.out.println("Undo Select");
                         startVertex.setColor(Color.WHITE);
                         startVertex = null;
                         return;
