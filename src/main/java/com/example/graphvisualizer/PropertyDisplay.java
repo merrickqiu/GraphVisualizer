@@ -21,12 +21,20 @@ public class PropertyDisplay extends VBox {
         this.graph = graph;
         this.setBackground(new Background(new BackgroundFill(Color.GREY, CornerRadii.EMPTY, Insets.EMPTY)));
         properties = new ArrayList<>();
+        this.getChildren().add(new Text("------INSTRUCTIONS------"));
+        this.getChildren().add(
+                new Text("Left click to add vertex.\nRight click to toggle edge.\nShift click to delete vertex"));
         this.getChildren().add(new Text("----GRAPH PROPERTIES----"));
         addProperty("Vertices: ", graph::getVertexCount);
         addProperty("Edges: ", graph::getEdgeCount);
         addProperty("Minimum Degree: ", graph::getMinDegree);
         addProperty("Maximum Degree: ", graph::getMaxDegree);
+        addProperty("Average Degree: ", graph::getAverageDegree);
+        addProperty("Girth: ", graph::getGirth);
+        addProperty("Complete: ", graph::isComplete);
+        addProperty("Regularity: ", graph::regularity);
         addProperty("Bipartite: ", graph::isBipartite);
+
     }
 
     public void addProperty(String label, Supplier<?> propertySupplier) {

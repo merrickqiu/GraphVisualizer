@@ -97,6 +97,9 @@ public class GUI extends Application {
             graph.removeVertex(vertex.getLabel());
             display.refresh();
 
+            if (vertex == startVertex) {
+                startVertex = null;
+            }
             //Edge removal
             while(!vertex.edges.isEmpty()) {
                 Edge edge = vertex.edges.get(0);

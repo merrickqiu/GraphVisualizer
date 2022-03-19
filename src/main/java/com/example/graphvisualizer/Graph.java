@@ -61,67 +61,220 @@ public class Graph<T> {
     }
 
     public int getMinDegree() {
-        try {
-            return adjList.values().stream().mapToInt(List::size).min().orElseThrow(NoSuchElementException::new);
-        }
-        catch (NoSuchElementException e) {
-            return 0;
-        }
+        return adjList.values().stream().mapToInt(List::size).min().orElse(0);
     }
 
     public int getMaxDegree() {
+        return adjList.values().stream().mapToInt(List::size).max().orElse(0);
+    }
+
+    public String getAverageDegree() {
         try {
-            return adjList.values().stream().mapToInt(List::size).max().orElseThrow(NoSuchElementException::new);
+            return String.format("%.2f", adjList.values().stream()
+                    .mapToInt(List::size).average()
+                    .orElseThrow(NoSuchElementException::new));
+        } catch (NoSuchElementException e){
+            return "NaN";
         }
-        catch (NoSuchElementException e){
-            return 0;
+    }
+
+    public String getGirth() {
+        Integer girth = null;
+        for (T source : adjList.keySet()) {
+            List<T> neighbors = new ArrayList<>(adjList.get(source)); // copy so that foreach works
+            for (T destination : neighbors) {
+                removeEdge(source, destination);
+                int distance = dijkstraDistance(source, destination);
+                System.out.println(adjList.get(source).toString() + adjList.get(destination));
+                System.out.printf("Distance from %s to %s: %d\n", source, destination, distance);
+                if (distance != -1 && (girth == null || distance+1 < girth)) {
+                    girth = distance + 1;
+                }
+                addEdge(source, destination);
+            }
+        }
+        return girth == null ? "INFINITE GIRTH" : girth.toString();
+    }
+
+    class Node implements Comparable<Node> {
+        public T vertex;
+        public Node previous;
+        public double cost;
+        public Node(T vertex, T previous, Double cost) {
+            this.vertex = vertex;
+            this.cost = cost;
+        }
+        @Override
+        public int compareTo(Node that) {
+            return Double.compare(this.cost, that.cost);
+        }
+    }
+    private int dijkstraDistance(T v1, T v2) {
+        List<T> path = dijkstraPath(v1, v2);
+        return path == null ? -1 : path.size()-1;
+    }
+
+    // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Using_a_priority_queue
+    private List<T> dijkstraPath(T v1, T v2) {
+        PriorityQueue<Node> queue = new PriorityQueue<>();
+        Map<T, Node> nodeMap = new HashMap<>();
+
+        Node sourceNode = new Node(v1, null, 0.0);
+        queue.add(sourceNode);
+        nodeMap.put(v1, sourceNode);
+
+        for (T vertex : adjList.keySet()) {
+            if (vertex != v1) {
+                Node node = new Node(vertex, null, Double.POSITIVE_INFINITY);
+                queue.add(node);
+                nodeMap.put(vertex, node);
+            }
         }
 
+        while (!queue.isEmpty()) {
+            Node current = queue.poll();
+            if (current.vertex == v2) {
+                if (current.cost == Double.POSITIVE_INFINITY) {
+                    return null;
+                }
+                List<T> path = new LinkedList<>();
+                Node pathNode = nodeMap.get(v2);
+                while(pathNode != null) {
+                    path.add(0, pathNode.vertex);
+                    pathNode = pathNode.previous;
+                }
+                return path;
+            }
+            for(T neighbor : adjList.get(current.vertex)) {
+                Node neighborNode = nodeMap.get(neighbor);
+                double altDistance = current.cost + 1.0;
+                if (altDistance < neighborNode.cost) {
+                    neighborNode.cost = altDistance;
+                    neighborNode.previous = current;
+                }
+            }
+        }
+        return null;
+    }
+    public boolean isComplete() {
+        return getEdgeCount() == (getVertexCount()*(getVertexCount()-1)) / 2;
+    }
+
+    public String regularity() {
+        if (getMinDegree() == getMaxDegree()) {
+            return getMinDegree() + "-regular";
+        } else {
+            return "Not regular";
+        }
+    }
+
+    protected class BFS implements Iterable<T> {
+        T source;
+        public BFS(T source) {
+            this.source = source;
+        }
+        public Iterator<T> iterator() {
+            return new iteratorBFS(source);
+        }
+        class iteratorBFS implements Iterator<T> {
+            Set<T> visited = new HashSet<>();
+            Queue<T> searchQueue = new LinkedList<>();
+
+            public iteratorBFS(T source) {
+                searchQueue.add(source);
+            }
+            public boolean hasNext() {
+                return !searchQueue.isEmpty();
+            }
+
+            public T next() {
+                if(searchQueue.isEmpty()) {
+                    throw new NoSuchElementException();
+                }
+                T next = searchQueue.remove();
+                visited.add(next);
+                for(T neighbor : adjList.get(next)) {
+                    if (!visited.contains(neighbor)) {
+                        searchQueue.add(neighbor);
+                    }
+                }
+                return next;
+            }
+        }
+    }
+    protected class DFS implements Iterable<T> {
+        T source;
+        public DFS(T source) {
+            this.source = source;
+        }
+        public Iterator<T> iterator() {
+            return new iteratorDFS(source);
+        }
+        class iteratorDFS implements Iterator<T> {
+            Set<T> visited = new HashSet<>();
+            Stack<T> searchStack = new Stack<>();
+
+            public iteratorDFS(T source) {
+                searchStack.push(source);
+            }
+            public boolean hasNext() {
+                return !searchStack.isEmpty();
+            }
+
+            public T next() {
+                if(searchStack.isEmpty()) {
+                    throw new NoSuchElementException();
+                }
+                T next = searchStack.pop();
+                visited.add(next);
+                for(T neighbor : adjList.get(next)) {
+                    if (!visited.contains(neighbor)) {
+                        searchStack.push(neighbor);
+                    }
+                }
+                return next;
+            }
+        }
+    }
+
+    private List<T> subgraphSources() {
+        List<T> sources = new ArrayList<>();
+        Set<T> visited = new HashSet<>();
+        for (T vertex : adjList.keySet()) {
+            if (visited.contains(vertex)) {
+                continue;
+            }
+            sources.add(vertex);
+            (new BFS(vertex)).forEach(visited::add);
+        }
+        return sources;
     }
     public boolean isBipartite() {
         if (adjList.isEmpty()) {
             return true;
         }
-        // Inefficient but works for small graphs
-        for (T source : adjList.keySet()) {
+        for (T source : subgraphSources()) {
             if (!isBipartite(source)) {
                 return false;
             }
         }
         return true;
     }
-    //Assumes that graph is all connected
-    @Deprecated
     public boolean isBipartite(T source) {
-        boolean isRed = true;
-        Set<T> visited = new HashSet<>();
-        Queue<T> searchQueue = new LinkedList<T>();
-
         Set<T> red = new HashSet<>();
         Set<T> blue = new HashSet<>();
-
-        searchQueue.add(source);
         red.add(source);
+        for(T vertex : new BFS(source)) {
+            boolean isRed = red.contains(vertex);
+            Set<T> currentColor = isRed ? red : blue;
+            Set<T> otherColor = isRed ? blue : red;
+            currentColor.add(vertex);
 
-        while (!searchQueue.isEmpty()) {
-            // Visit next vertex
-            T vertex = searchQueue.remove();
-            visited.add(vertex);
-
-            Set<T> currentColor = red.contains(vertex) ? red : blue;
-            Set<T> otherColor = red.contains(vertex) ? blue : red;
-
-            // Look through all unvisited neighbors
-            for(T neighbor : adjList.get(vertex)) {
-                if (!visited.contains(neighbor)) {
-                    // If neighbor is same color then not bipartite
-                    if (currentColor.contains(neighbor)) {
-                        return false;
-                    }
-                    // Otherwise color and add the neighbor
-                    otherColor.add(neighbor);
-                    searchQueue.add(neighbor);
+            for (T neighbor : adjList.get(vertex)) {
+                if (currentColor.contains(neighbor)) {
+                    return false;
                 }
+                otherColor.add(neighbor);
             }
         }
         return true;
@@ -143,37 +296,13 @@ public class Graph<T> {
 
     public static void main(String[] args) {
         Graph<Integer> g = new Graph<>();
-        g.addEdge(0, 1);
-        g.addEdge(0, 4);
+        //g.addEdge(0, 1);
         g.addEdge(1, 2);
-        g.addEdge(1, 3);
-        g.addEdge(1, 4);
         g.addEdge(2, 3);
-        g.addEdge(3, 4);
-        System.out.println(g.getVertexCount());
-        System.out.println(g.getEdgeCount());
-        System.out.println(g.isBipartite());
-        System.out.println(g);
-
-        g.removeVertex(1);
-        System.out.println(g.getVertexCount());
-        System.out.println(g.getEdgeCount());
-        System.out.println(g);
-
-        g.removeEdge(0, 4);
-        System.out.println(g.getVertexCount());
-        System.out.println(g.getEdgeCount());
-        System.out.println(g);
-
-        Graph<Integer> bipartite = new Graph<>();
-        bipartite.addEdge(0, 1);
-        bipartite.addEdge(1, 2);
-        bipartite.addEdge(2, 3);
-        bipartite.addEdge(3, 4);
-        bipartite.addEdge(4, 5);
-        bipartite.addEdge(5, 0);
-        System.out.println(bipartite.isBipartite());
-        System.out.println(bipartite);
+        g.addEdge(3, 0);
+        g.removeEdge(0, 1);
+        //System.out.println(g.dijkstraPath(0, 1));
+        System.out.println(g.dijkstraPath(1, 0));
     }
 }
 
