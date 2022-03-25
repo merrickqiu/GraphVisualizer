@@ -1,0 +1,8 @@
+com\example\graphvisualizer\Edge.class
+com\example\graphvisualizer\Property.class
+com\example\graphvisualizer\Vertex.class
+module-info.class
+com\example\graphvisualizer\Graph.class
+com\example\graphvisualizer\MouseHandler.class
+com\example\graphvisualizer\PropertyDisplay.class
+com\example\graphvisualizer\GUI.class
